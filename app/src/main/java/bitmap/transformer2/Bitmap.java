@@ -1,100 +1,80 @@
 package bitmap.transformer2;
-
-
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-
+import java.util.ArrayList;
+import java.awt.image.ColorModel;
 public class Bitmap {
 
-    BufferedImage image;
-    String newFileName;
 
-    public Bitmap(String filePath) {
-        this.image = read(filePath);
-
+    public static BufferedImage deepCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
-//     public Bitmap(String path , String newFileName){
-//
-//          try {
-//
-//
-//              this.image = ImageIO.read(new File(path));
-//          } catch (IOException r){
-//               System.out.println(r.getMessage());
-//          }
-//
-//          this.newFileName =newFileName;
-//     }
+    public static void invert(BufferedImage image,String outputPath) throws IOException {
+        BufferedImage imageInvert = deepCopy(image) ;
+        int imageHeight = imageInvert.getHeight();
+        int imageWidth = imageInvert.getWidth();
+        int[][] array2D = new int[imageWidth][imageHeight];
+        int   xlength=imageInvert.getHeight()-1;//272
+        int  ylength=imageInvert.getWidth()-1;//299
+        for (int xPixel = 0; xPixel < array2D.length; xPixel++) {
+            for (int yPixel = 0; yPixel < array2D[xPixel].length; yPixel++) {
+                int color = imageInvert.getRGB(xPixel, yPixel);
+                imageInvert.setRGB(xPixel , yPixel ,color ^ 0x00ffffff);
 
-    public void invert() {
-        int rgb;
+            }
+            ImageIO.write(imageInvert, "png", new File(outputPath));
 
-        for (int h = 1; h < image.getHeight(); h++) {
-            for (int w = 1; w < image.getWidth(); w++) {
-                rgb = 255 - this.image.getRGB(w, h);
-                this.image.setRGB(w, h, rgb);
+        }
+    }
+    public static void border(BufferedImage image,String outputPath) throws IOException {
+        BufferedImage imageBoarder = deepCopy(image) ;
+        int imageHeight = imageBoarder.getHeight();
+        int imageWidth = imageBoarder.getWidth();
+        int[][] array2D = new int[imageWidth][imageHeight];
+        int   xlength=imageBoarder.getHeight()-1;//272
+        int  ylength=imageBoarder.getWidth()-1;//299
+        for (int xPixel = 0; xPixel < array2D.length; xPixel++) {
+            for (int yPixel = 0; yPixel < array2D[xPixel].length; yPixel++) {
+                if(xPixel<=10||xPixel>=(ylength-11) || yPixel<=10||yPixel>=(xlength-11)){
+                    imageBoarder.setRGB(xPixel, yPixel, -16777216);
+                }
+
+            }
+            ImageIO.write(imageBoarder, "png", new File(outputPath));
+
+        }
+    }
+    public void randomize(BufferedImage image,String outputPath) throws IOException {
+        BufferedImage imageRandomized = deepCopy(image) ;
+        System.out.println("height " +  imageRandomized.getHeight());
+        System.out.println("width " +  imageRandomized.getWidth());
+        int imageHeight = imageRandomized.getHeight();
+        int imageWidth = imageRandomized.getWidth();
+        ArrayList<Integer> colorSet = new ArrayList();
+        Integer randomValue = (int)Math.random();
+        int[][] array2D = new int[imageWidth][imageHeight];
+        int blackPixels = 0 ;
+        int whitePixels = 0 ;
+        for (int xPixel = 0; xPixel < array2D.length; xPixel++)
+        {
+            for (int yPixel = 0; yPixel < array2D[xPixel].length; yPixel++)
+            {
+                int color = imageRandomized.getRGB(xPixel, yPixel);
+                colorSet.add(color);
+                randomValue = (int)(Math.random()*(colorSet.size()-1));
+                imageRandomized.setRGB(xPixel,yPixel,colorSet.get(randomValue));
+                colorSet.remove(randomValue);
             }
         }
+        ImageIO.write(imageRandomized , "png" , new File(outputPath));
     }
 
-    public void vflip() {
-        int src = 0;
-        int dst = 0;
 
-        for (int h = 1; h < image.getHeight() / 2; h++) {
-            for (int w = 1; w < image.getWidth(); w++) {
-                src = this.image.getRGB(w, h);
-                dst = this.image.getRGB(w, image.getHeight() - h);
-                this.image.setRGB(w, h, dst);
-                this.image.setRGB(w, image.getHeight() - h, src);
-            }
-        }
-    }
-
-    public void light() {
-        int rgb;
-
-        for (int h = 1; h < image.getHeight(); h++) {
-            for (int w = 1; w < image.getWidth(); w++) {
-                rgb = (this.image.getRGB(w, h) * 2) % 256;
-                this.image.setRGB(w, h, rgb);
-            }
-        }
-    }
-
-    public BufferedImage read(String filePath) {
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(filePath));
-        } catch (IOException e) {
-            System.out.println("Failed to open image");
-            System.out.println(e.getMessage());
-        }
-        return image;
-    }
-
-    public void save(String filePath) {
-        try {
-            ImageIO.write(this.image, "bmp", new File(filePath));
-        } catch (IOException e) {
-            System.out.println("ERROR SAVING!");
-            System.out.println(e);
-        }
-    }
 }
-
-
-
-
-//     public BufferedImage read(String filePath) {
-//          BufferedImage img = null;
-//          try {
-//               img = ImageIO.read(new File(filePath));
-//          } catch (IOException e) {
-//               System.out.println("Failed to open image");
-//               System.out.println(e);
-//          }
-//          return img;
-//     }
